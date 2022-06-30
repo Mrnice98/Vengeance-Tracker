@@ -82,7 +82,6 @@ public class VengTrackerPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.info("Example started!");
 		currentlyVenged.clear();
 		overlayManager.add(overlay);
 	}
@@ -90,7 +89,6 @@ public class VengTrackerPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
-		log.info("Example stopped!");
 		currentlyVenged.clear();
 		overlayManager.remove(overlay);
 	}
