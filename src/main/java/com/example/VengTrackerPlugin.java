@@ -2,16 +2,27 @@ package com.example;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
+
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicChanged;
 import net.runelite.api.events.OverheadTextChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.party.PartyMember;
+import net.runelite.client.party.PartyService;
 import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.party.PartyPlugin;
+import net.runelite.client.plugins.party.PartyPluginService;
+import net.runelite.client.plugins.party.data.PartyData;
 import net.runelite.client.ui.overlay.OverlayManager;
+
 
 import java.util.ArrayList;
 
@@ -21,6 +32,7 @@ import java.util.ArrayList;
 		description = "Shows Veng icon next to players who are venganced",
 		tags = {"PVM", "Vengeance", "Player status"}
 )
+@PluginDependency(PartyPlugin.class)
 public class VengTrackerPlugin extends Plugin
 {
 	@Inject
@@ -34,6 +46,14 @@ public class VengTrackerPlugin extends Plugin
 
 	@Inject
 	private OverlayManager overlayManager;
+
+
+	@Inject
+	private  PartyPluginService partyPluginService;
+
+
+	@Inject
+	private  PartyService partyService;
 
 	public ArrayList<String> currentlyVenged = new ArrayList<String>();
 
@@ -49,9 +69,28 @@ public class VengTrackerPlugin extends Plugin
 			{
 				currentlyVenged.add(player.getName());
 			}
-
 		}
 	}
+
+	@Subscribe
+	public void onGameTick(GameTick gameTick)
+	{
+		if(partyService.isInParty())
+		{
+			for (PartyMember partyMember : partyService.getMembers())
+			{
+				PartyData partyData = partyPluginService.getPartyData(partyMember.getMemberId());
+				String playerName = partyMember.getDisplayName();
+
+				if (partyData.isVengeanceActive() && !currentlyVenged.contains(playerName))
+				{
+					currentlyVenged.add(playerName);
+				}
+			}
+		}
+
+	}
+
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
