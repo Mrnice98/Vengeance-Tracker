@@ -7,6 +7,7 @@ import net.runelite.api.SpriteID;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
+import net.runelite.client.util.ImageUtil;
 
 
 import javax.inject.Inject;
@@ -21,6 +22,9 @@ public class VengTrackerOverlay extends Overlay
 
     @Inject
     private VengTrackerPlugin plugin;
+
+    @Inject
+    private ImageUtil imageUtil;
 
     private final Client client;
     private final SpriteManager spriteManager;
@@ -61,19 +65,7 @@ public class VengTrackerOverlay extends Overlay
         Point point = player.getCanvasImageLocation(vengIcon, player.getLogicalHeight());
         point = new Point(point.getX() + config.XOffset(), point.getY() + config.YOffset());
 
-        OverlayUtil.renderImageLocation(graphics, point, resize(vengIcon,16 - config.ZOffset(),18 - config.ZOffset()));
-    }
-
-    public static BufferedImage resize(BufferedImage img, int newW, int newH)
-    {
-        Image tmp = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
-        BufferedImage dimg = new BufferedImage(newW, newH, img.getType());
-
-        Graphics2D g2d = dimg.createGraphics();
-        g2d.drawImage(tmp, 0, 0, null);
-        g2d.dispose();
-
-        return dimg;
+        OverlayUtil.renderImageLocation(graphics, point,  ImageUtil.resizeImage(vengIcon,16 - config.ZOffset(),18 - config.ZOffset()));
     }
 
 

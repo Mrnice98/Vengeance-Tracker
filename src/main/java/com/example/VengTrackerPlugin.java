@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.annotations.Varbit;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicChanged;
@@ -47,10 +48,8 @@ public class VengTrackerPlugin extends Plugin
 	@Inject
 	private OverlayManager overlayManager;
 
-
 	@Inject
 	private  PartyPluginService partyPluginService;
-
 
 	@Inject
 	private  PartyService partyService;
@@ -60,7 +59,7 @@ public class VengTrackerPlugin extends Plugin
 	@Subscribe
 	public void onGraphicChanged(GraphicChanged graphicChanged)
 	{
-		if (client.getLocalPlayer() != null && graphicChanged.getActor() instanceof Player)
+		if (client.getLocalPlayer() != null && graphicChanged.getActor() instanceof Player && !isInPvP())
 		{
 			Player player = (Player) graphicChanged.getActor();
 			boolean playerVenged = currentlyVenged.contains(player.getName());
@@ -75,7 +74,7 @@ public class VengTrackerPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
-		if(partyService.isInParty())
+		if(partyService.isInParty() && !isInPvP())
 		{
 			for (PartyMember partyMember : partyService.getMembers())
 			{
@@ -90,7 +89,6 @@ public class VengTrackerPlugin extends Plugin
 		}
 
 	}
-
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
@@ -111,6 +109,11 @@ public class VengTrackerPlugin extends Plugin
 		}
 	}
 
+	private boolean isInPvP()
+	{
+		//0 = not in pvp , 1 = in pvp
+		return client.getVarbitValue(Varbits.PVP_SPEC_ORB) == 1;
+	}
 
 	@Provides
 	VengTrackerConfig provideConfig(ConfigManager configManager)
