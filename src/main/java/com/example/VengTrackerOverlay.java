@@ -1,9 +1,8 @@
 package com.example;
 
-import net.runelite.api.Client;
-import net.runelite.api.Player;
+import net.runelite.api.*;
 import net.runelite.api.Point;
-import net.runelite.api.SpriteID;
+import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
@@ -62,10 +61,52 @@ public class VengTrackerOverlay extends Overlay
 
     private void renderPlayerOverlay(Graphics2D graphics, Player player, BufferedImage vengIcon)
     {
-        Point point = player.getCanvasImageLocation(vengIcon, player.getLogicalHeight());
-        point = new Point(point.getX() + config.XOffset(), point.getY() + config.YOffset());
+        Point renderPoint;
 
-        OverlayUtil.renderImageLocation(graphics, point,  ImageUtil.resizeImage(vengIcon,16 - config.ZOffset(),18 - config.ZOffset()));
+
+
+        if (config.renderMethod() == VengTrackerConfig.RenderMethod.HUG_PLAYER)
+        {
+            LocalPoint playerLocation = player.getLocalLocation();
+            LocalPoint vengLoc = new LocalPoint(playerLocation.getX() + config.XOffset(), playerLocation.getY());
+            renderPoint = Perspective.getCanvasImageLocation(client, vengLoc,vengIcon, (getAnchorPoint(player)) + config.YOffset());
+
+        }
+        else
+        {
+            Point point = player.getCanvasImageLocation(vengIcon, getAnchorPoint(player));
+            renderPoint = new Point(point.getX() + config.XOffset(), point.getY() + config.YOffset());
+        }
+
+        OverlayUtil.renderImageLocation(graphics, renderPoint,  ImageUtil.resizeImage(vengIcon,16 - config.ZOffset(),18 - config.ZOffset()));
+
+    }
+
+
+    public int getAnchorPoint(Player player)
+    {
+        int anchorPoint;
+
+        switch (config.anchorPoints())
+        {
+            case CHEST:
+                anchorPoint = player.getLogicalHeight() / 2;
+                break;
+
+            case HEAD:
+                anchorPoint = player.getLogicalHeight();
+                break;
+
+            case FEET:
+                anchorPoint = 0;
+                break;
+
+            default:
+                anchorPoint = 0;
+        }
+
+        return anchorPoint;
+
     }
 
 

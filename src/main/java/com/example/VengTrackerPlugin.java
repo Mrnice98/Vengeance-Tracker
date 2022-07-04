@@ -8,10 +8,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.annotations.Varbit;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.GraphicChanged;
-import net.runelite.api.events.OverheadTextChanged;
+import net.runelite.api.events.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.party.PartyMember;
@@ -30,7 +27,7 @@ import java.util.ArrayList;
 @Slf4j
 @PluginDescriptor(
 		name = "Vengeance Tracker",
-		description = "Shows Veng icon next to players who are venganced",
+		description = "Shows Veng icon next to players who are venganced (works with party plugin)",
 		tags = {"PVM", "Vengeance", "Player status"}
 )
 @PluginDependency(PartyPlugin.class)
@@ -85,7 +82,17 @@ public class VengTrackerPlugin extends Plugin
 				{
 					currentlyVenged.add(playerName);
 				}
+
+				if (!partyData.isVengeanceActive() && currentlyVenged.contains(playerName))
+				{
+					currentlyVenged.remove(playerName);
+				}
 			}
+		}
+
+		if (currentlyVenged.contains(client.getLocalPlayer().getName()) && client.getVarbitValue(Varbits.VENGEANCE_ACTIVE) == 0)
+		{
+			currentlyVenged.remove(client.getLocalPlayer().getName());
 		}
 
 	}
