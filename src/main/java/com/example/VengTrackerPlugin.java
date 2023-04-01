@@ -26,7 +26,7 @@ import java.util.ArrayList;
 @Slf4j
 @PluginDescriptor(
 		name = "Vengeance Tracker",
-		description = "Shows Veng icon next to players who are venganced (works with party plugin)",
+		description = "Shows Veng icon next to players who are venged and more (works with party plugin)",
 		tags = {"PVM", "Vengeance", "Player status"}
 )
 @PluginDependency(PartyPlugin.class)
