@@ -130,7 +130,6 @@ public class VengTrackerPlugin extends Plugin
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
 
-
 		if (configManager.getConfiguration("party","statusOverlayVeng").equals("true") && gameStateChanged.getGameState() == GameState.LOGGED_IN && config.remindToDisable())
 		{
 			SwingUtilities.invokeLater(()->

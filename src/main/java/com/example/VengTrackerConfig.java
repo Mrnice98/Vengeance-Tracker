@@ -90,7 +90,7 @@ public interface VengTrackerConfig extends Config
 
 	@ConfigItem(
 			keyName = "indicateVenged",
-			name = "indicate Venged Players in stack",
+			name = "Indicate Venged Players in stack",
 			description = "Will mark Venged players menu entries with a white (V)",
 			position = 5,
 			section = generalSettings
