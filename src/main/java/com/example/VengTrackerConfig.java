@@ -89,6 +89,30 @@ public interface VengTrackerConfig extends Config
 
 
 	@ConfigItem(
+			keyName = "indicateVenged",
+			name = "indicate Venged Players in stack",
+			description = "Will mark Venged players menu entries with a white (V)",
+			position = 5,
+			section = generalSettings
+	)
+	default boolean indicateVenged()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "dePrioVenged",
+			name = "De-Prioritise Venged players",
+			description = "When casting vengeance on another the client will prioritise non-venged players",
+			position = 6,
+			section = generalSettings
+	)
+	default boolean dePrioVenged()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "Render Method",
 			name = "Render Method",
 			description = "Render Method",
@@ -101,6 +125,18 @@ public interface VengTrackerConfig extends Config
 	{
 		HUG_PLAYER,
 		ADJUST_VIA_CAM_ANGLE;
+	}
+
+	@ConfigItem(
+			keyName = "remindToDisable",
+			name = "remindToDisable",
+			description = "remindToDisable",
+			position = 3,
+			hidden = true
+	)
+	default boolean remindToDisable()
+	{
+		return true;
 	}
 
 

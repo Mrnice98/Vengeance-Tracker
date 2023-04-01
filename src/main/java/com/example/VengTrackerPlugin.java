@@ -1,14 +1,11 @@
 package com.example;
 
 import com.google.inject.Provides;
-import javax.inject.Inject;
-
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
-import net.runelite.api.annotations.Varbit;
 import net.runelite.api.events.*;
+import net.runelite.client.chat.ChatMessageManager;
+import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.party.PartyMember;
@@ -20,8 +17,10 @@ import net.runelite.client.plugins.party.PartyPlugin;
 import net.runelite.client.plugins.party.PartyPluginService;
 import net.runelite.client.plugins.party.data.PartyData;
 import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.util.Text;
 
-
+import javax.inject.Inject;
+import javax.swing.*;
 import java.util.ArrayList;
 
 @Slf4j
@@ -51,6 +50,12 @@ public class VengTrackerPlugin extends Plugin
 	@Inject
 	private  PartyService partyService;
 
+	@Inject
+	private ConfigManager configManager;
+
+	@Inject
+	private ChatMessageManager chatMessageManager;
+
 	public ArrayList<String> currentlyVenged = new ArrayList<String>();
 
 	@Subscribe
@@ -63,14 +68,47 @@ public class VengTrackerPlugin extends Plugin
 
 			if ((player.getGraphic() == 725 || player.getGraphic() == 726) && !playerVenged)
 			{
-				currentlyVenged.add(player.getName());
+				currentlyVenged.add(Text.sanitize(player.getName()));
 			}
 		}
 	}
 
 	@Subscribe
+	public void onMenuOpened(MenuOpened event)
+	{
+
+
+		for (MenuEntry entry : event.getMenuEntries())
+		{
+			System.out.println(entry.getTarget());
+
+			if (entry.getPlayer() != null && currentlyVenged.contains(Text.sanitize(entry.getPlayer().getName())) && entry.getTarget().contains("Vengeance Other") && config.indicateVenged())
+			{
+				entry.setTarget(entry.getTarget() + " <col=ffffff> (V) <col=ffff00>");
+			}
+		}
+	}
+
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded event)
+	{
+		//System.out.println(event.getMenuEntry().getTarget());
+
+		MenuEntry entry = event.getMenuEntry();
+		if (entry.getPlayer() != null && currentlyVenged.contains(Text.sanitize(entry.getPlayer().getName())) && entry.getTarget().contains("Vengeance Other") && config.dePrioVenged())
+		{
+			entry.setDeprioritized(true);
+
+
+		}
+
+	}
+
+	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
+
+
 		if(partyService.isInParty() && !isInPvP())
 		{
 			for (PartyMember partyMember : partyService.getMembers())
@@ -78,28 +116,53 @@ public class VengTrackerPlugin extends Plugin
 				PartyData partyData = partyPluginService.getPartyData(partyMember.getMemberId());
 				String playerName = partyMember.getDisplayName();
 
-				if (partyData.isVengeanceActive() && !currentlyVenged.contains(playerName))
+				if (partyData.isVengeanceActive() && !currentlyVenged.contains(Text.sanitize(playerName)))
 				{
-					currentlyVenged.add(playerName);
+					currentlyVenged.add(Text.sanitize(playerName));
 				}
 
-				if (!partyData.isVengeanceActive() && currentlyVenged.contains(playerName))
+				if (!partyData.isVengeanceActive() && currentlyVenged.contains(Text.sanitize(playerName)))
 				{
-					currentlyVenged.remove(playerName);
+					currentlyVenged.remove(Text.sanitize(playerName));
 				}
 			}
 		}
 
-		if (currentlyVenged.contains(client.getLocalPlayer().getName()) && client.getVarbitValue(Varbits.VENGEANCE_ACTIVE) == 0)
+		if (currentlyVenged.contains(Text.sanitize(client.getLocalPlayer().getName())) && client.getVarbitValue(Varbits.VENGEANCE_ACTIVE) == 0)
 		{
-			currentlyVenged.remove(client.getLocalPlayer().getName());
+			currentlyVenged.remove(Text.sanitize(client.getLocalPlayer().getName()));
 		}
 
 	}
 
+
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
+
+
+		if (configManager.getConfiguration("party","statusOverlayVeng").equals("true") && gameStateChanged.getGameState() == GameState.LOGGED_IN && config.remindToDisable())
+		{
+			SwingUtilities.invokeLater(()->
+			{
+				String[] options = { "Yes", "No", "No & Don't show again" };
+				int option = JOptionPane.showOptionDialog(null, "Disable Party Vengeance (Vengeance Tracker handles party also)", "Vengeance Tracker & Party Vengeance are both enabled", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
+
+				if (options[option].equals("Yes"))
+				{
+					configManager.setConfiguration("party","statusOverlayVeng","false");
+				}
+
+				if (options[option].equals("No & Don't show again"))
+				{
+					configManager.setConfiguration("VengTracker","remindToDisable","false");
+				}
+
+			});
+
+			chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("<col=ff6600>Please Disable 'Show Vengance' in the Party Plugin Config <col=ffff00>").build());
+		}
+
 		if (gameStateChanged.getGameState() == GameState.HOPPING || gameStateChanged.getGameState() == GameState.LOGGING_IN)
 		{
 			currentlyVenged.clear();
@@ -112,7 +175,7 @@ public class VengTrackerPlugin extends Plugin
 		Actor actor = event.getActor();
 		if (actor instanceof Player && actor.getName() != null && currentlyVenged.contains(actor.getName()) && actor.getOverheadText().equals("Taste vengeance!"))
 		{
-			currentlyVenged.remove(actor.getName());
+			currentlyVenged.remove(Text.sanitize(actor.getName()));
 		}
 	}
 
@@ -131,6 +194,7 @@ public class VengTrackerPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
+
 		currentlyVenged.clear();
 		overlayManager.add(overlay);
 	}

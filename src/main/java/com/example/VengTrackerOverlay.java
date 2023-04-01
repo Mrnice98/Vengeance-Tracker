@@ -1,13 +1,12 @@
 package com.example;
 
-import net.runelite.api.*;
 import net.runelite.api.Point;
+import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.game.SpriteManager;
-import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
 import net.runelite.client.util.ImageUtil;
-
+import net.runelite.client.util.Text;
 
 import javax.inject.Inject;
 import java.awt.*;
@@ -25,27 +24,27 @@ public class VengTrackerOverlay extends Overlay
     @Inject
     private ImageUtil imageUtil;
 
-    private final Client client;
-    private final SpriteManager spriteManager;
+    @Inject
+    private Client client;
 
     @Inject
-    private VengTrackerOverlay(Client client, SpriteManager spriteManager)
-    {
-        this.client = client;
-        this.spriteManager = spriteManager;
+    private SpriteManager spriteManager;
 
+    @Inject
+    private VengTrackerOverlay()
+    {
         setLayer(OverlayLayer.ABOVE_SCENE);
         setPosition(OverlayPosition.DYNAMIC);
         setPriority(OverlayPriority.HIGH);
     }
 
     @Override
-    public Dimension render(Graphics2D graphics) {
-
+    public Dimension render(Graphics2D graphics)
+    {
 
         for (Player player : client.getPlayers())
         {
-            if (plugin.currentlyVenged.contains(player.getName()))
+            if (plugin.currentlyVenged.contains(Text.sanitize(player.getName())))
             {
                 BufferedImage vengIcon = spriteManager.getSprite(SpriteID.SPELL_VENGEANCE_OTHER, 0);
                 if (vengIcon != null)
@@ -63,8 +62,6 @@ public class VengTrackerOverlay extends Overlay
     {
         Point renderPoint;
 
-
-
         if (config.renderMethod() == VengTrackerConfig.RenderMethod.HUG_PLAYER)
         {
             LocalPoint playerLocation = player.getLocalLocation();
@@ -78,7 +75,10 @@ public class VengTrackerOverlay extends Overlay
             renderPoint = new Point(point.getX() + config.XOffset(), point.getY() + config.YOffset());
         }
 
-        OverlayUtil.renderImageLocation(graphics, renderPoint,  ImageUtil.resizeImage(vengIcon,16 - config.ZOffset(),18 - config.ZOffset()));
+        if (client.getPlane() == player.getWorldLocation().getPlane() && renderPoint != null && player.getLocalLocation().isInScene())
+        {
+            OverlayUtil.renderImageLocation(graphics, renderPoint,  ImageUtil.resizeImage(vengIcon,16 - config.ZOffset(),18 - config.ZOffset()));
+        }
 
     }
 
