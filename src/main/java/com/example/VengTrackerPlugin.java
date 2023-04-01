@@ -76,12 +76,8 @@ public class VengTrackerPlugin extends Plugin
 	@Subscribe
 	public void onMenuOpened(MenuOpened event)
 	{
-
-
 		for (MenuEntry entry : event.getMenuEntries())
 		{
-			System.out.println(entry.getTarget());
-
 			if (entry.getPlayer() != null && currentlyVenged.contains(Text.sanitize(entry.getPlayer().getName())) && entry.getTarget().contains("Vengeance Other") && config.indicateVenged())
 			{
 				entry.setTarget(entry.getTarget() + " <col=ffffff> (V) <col=ffff00>");
@@ -92,23 +88,17 @@ public class VengTrackerPlugin extends Plugin
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded event)
 	{
-		//System.out.println(event.getMenuEntry().getTarget());
 
 		MenuEntry entry = event.getMenuEntry();
 		if (entry.getPlayer() != null && currentlyVenged.contains(Text.sanitize(entry.getPlayer().getName())) && entry.getTarget().contains("Vengeance Other") && config.dePrioVenged())
 		{
 			entry.setDeprioritized(true);
-
-
 		}
-
 	}
 
 	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
-
-
 		if(partyService.isInParty() && !isInPvP())
 		{
 			for (PartyMember partyMember : partyService.getMembers())
