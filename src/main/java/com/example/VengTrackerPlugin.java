@@ -132,24 +132,33 @@ public class VengTrackerPlugin extends Plugin
 
 		if (configManager.getConfiguration("party","statusOverlayVeng").equals("true") && gameStateChanged.getGameState() == GameState.LOGGED_IN && config.remindToDisable())
 		{
-			SwingUtilities.invokeLater(()->
+
+			if (configManager.getConfiguration("runelite","gameAlwaysOnTop").equals("false"))
 			{
-				String[] options = { "Yes", "No", "No & Don't show again" };
-				int option = JOptionPane.showOptionDialog(null, "Disable Party Vengeance (Vengeance Tracker handles party also)", "Vengeance Tracker & Party Vengeance are both enabled", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
-
-				if (options[option].equals("Yes"))
+				SwingUtilities.invokeLater(()->
 				{
-					configManager.setConfiguration("party","statusOverlayVeng","false");
-				}
+					String[] options = { "Yes", "No", "No & Don't show again" };
+					int option = JOptionPane.showOptionDialog(null, "Disable Party Vengeance (Vengeance Tracker handles party also)", "Vengeance Tracker & Party Vengeance are both enabled", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
 
-				if (options[option].equals("No & Don't show again"))
-				{
-					configManager.setConfiguration("VengTracker","remindToDisable","false");
-				}
+					if (options[option].equals("Yes"))
+					{
+						configManager.setConfiguration("party","statusOverlayVeng","false");
+					}
 
-			});
+					if (options[option].equals("No & Don't show again"))
+					{
+						configManager.setConfiguration("VengTracker","remindToDisable","false");
+					}
 
-			chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("<col=ff6600>Please Disable 'Show Vengance' in the Party Plugin Config <col=ffff00>").build());
+				});
+			}
+			else
+			{
+				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("").build());
+				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("<col=ff6600>Please Disable 'Show Vengance' in the Party Plugin Config<col=ffff00>").build());
+				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("").build());
+			}
+
 		}
 
 		if (gameStateChanged.getGameState() == GameState.HOPPING || gameStateChanged.getGameState() == GameState.LOGGING_IN)
