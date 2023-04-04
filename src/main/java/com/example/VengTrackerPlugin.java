@@ -130,10 +130,9 @@ public class VengTrackerPlugin extends Plugin
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
 
-		if (configManager.getConfiguration("party","statusOverlayVeng").equals("true") && gameStateChanged.getGameState() == GameState.LOGGED_IN && config.remindToDisable())
+		if (configManager.getConfiguration("party","statusOverlayVeng").equals("true") && config.remindToDisable())
 		{
-
-			if (configManager.getConfiguration("runelite","gameAlwaysOnTop").equals("false"))
+			if (configManager.getConfiguration("runelite","gameAlwaysOnTop").equals("false") && gameStateChanged.getGameState() == GameState.LOGGING_IN)
 			{
 				SwingUtilities.invokeLater(()->
 				{
@@ -152,11 +151,11 @@ public class VengTrackerPlugin extends Plugin
 
 				});
 			}
-			else
+			else if (gameStateChanged.getGameState() == GameState.LOGGED_IN)
 			{
-				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("").build());
+				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("---------------------------------------------------------").build());
 				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("<col=ff6600>Please Disable 'Show Vengance' in the Party Plugin Config<col=ffff00>").build());
-				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("").build());
+				chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.GAMEMESSAGE).runeLiteFormattedMessage("---------------------------------------------------------").build());
 			}
 
 		}
