@@ -4,10 +4,13 @@ import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.party.PartyDataService;
+import net.runelite.client.party.PartyDataType;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.plugins.Plugin;
@@ -15,7 +18,6 @@ import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.party.PartyPlugin;
 import net.runelite.client.plugins.party.PartyPluginService;
-import net.runelite.client.plugins.party.data.PartyData;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
@@ -46,6 +48,9 @@ public class VengTrackerPlugin extends Plugin
 
 	@Inject
 	private  PartyPluginService partyPluginService;
+
+	@Inject
+	private PartyDataService partyDataService;
 
 	@Inject
 	private  PartyService partyService;
@@ -99,30 +104,32 @@ public class VengTrackerPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
-		if(partyService.isInParty() && !isInPvP())
+		final Player localPlayer = client.getLocalPlayer();
+		if (localPlayer == null || localPlayer.getName() == null) return;
+
+		if (partyService.isInParty() && !isInPvP())
 		{
 			for (PartyMember partyMember : partyService.getMembers())
 			{
-				PartyData partyData = partyPluginService.getPartyData(partyMember.getMemberId());
-				String playerName = partyMember.getDisplayName();
+				String displayName = partyMember.getDisplayName();
+				if (displayName == null) continue;
 
-				if (partyData.isVengeanceActive() && !currentlyVenged.contains(Text.sanitize(playerName)))
+				String name = Text.sanitize(displayName);
+				if (partyMember.isVengeanceActive())
 				{
-					currentlyVenged.add(Text.sanitize(playerName));
+					currentlyVenged.add(name);
 				}
-
-				if (!partyData.isVengeanceActive() && currentlyVenged.contains(Text.sanitize(playerName)))
+				else
 				{
-					currentlyVenged.remove(Text.sanitize(playerName));
+					currentlyVenged.remove(name);
 				}
 			}
 		}
 
-		if (currentlyVenged.contains(Text.sanitize(client.getLocalPlayer().getName())) && client.getVarbitValue(Varbits.VENGEANCE_ACTIVE) == 0)
+		if (client.getVarbitValue(VarbitID.VENGEANCE_REBOUND) == 0)
 		{
-			currentlyVenged.remove(Text.sanitize(client.getLocalPlayer().getName()));
+			currentlyVenged.remove(Text.sanitize(localPlayer.getName()));
 		}
-
 	}
 
 
@@ -193,12 +200,14 @@ public class VengTrackerPlugin extends Plugin
 	{
 
 		currentlyVenged.clear();
+		partyDataService.subscribe(this, PartyDataType.VENGEANCE);
 		overlayManager.add(overlay);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
+		partyDataService.unsubscribe(this, PartyDataType.VENGEANCE);
 		currentlyVenged.clear();
 		overlayManager.remove(overlay);
 	}
